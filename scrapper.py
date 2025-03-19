@@ -1,3 +1,4 @@
+# NY times have paywall issue.
 import requests
 from bs4 import BeautifulSoup
 import time
@@ -156,16 +157,33 @@ def news_scraping(url):
     try:
         response = requests.get(url, headers=headers)
         soup = BeautifulSoup(response.text, 'html.parser')
-        # print(soup)
-        search_list = soup.find('div', class_="search-results")
-        print(search_list)
-        if search_list:
-            for search_item in search_list:
+        search_results = soup.find('div', class_="css-8xl60i")
+        search_list = search_results.find('ol')
+        search_items = search_list.find_all('li', class_='css-1l4w6pd', limit=3)
+        if search_items:
+            for search_item in search_items:
                 if search_item:
-                    # print(search_item)
-                    link = search_item.find('a', class_="u-clickable-card__link")
-                    print(link['href'])
-                    print(link.find('span').get_text())
+                    link = search_item.find('a')
+                    print('https://nytimes.com/'+link['href'])
+                    print(link.find('h4').get_text())
+
+                    response = requests.get('https://nytimes.com/'+link['href'], headers=headers)
+                    page = BeautifulSoup(response.text, 'html.parser')
+                    if page:
+                        stories  = page.find_all('p', class_='css-at9mc1 evys1bk0')
+                        print(stories)
+                        article__ = ''
+                        if stories:
+                            for story in stories:
+                                print(story.get_text())
+                                article__+=story.get_text()
+                                
+                            print(article__)
+
+                        else:
+                            print('!!story boards doesnt exist')
+                    else:
+                        print('!! Page doesnt exist')
                     print('\n')
                 else:
                     print('search item not found')
@@ -175,7 +193,7 @@ def news_scraping(url):
         print(f" Error scraping {url}: {e}")
 
 
-search_query = input('Search -- ')
+# search_query = input('Search -- ')
 # print('--------------------------------AP NEWS--------------------------------------')
 # ap_url="https://apnews.com/search?q="+search_query+"&s=0"
 # print(ap_url)
@@ -188,9 +206,20 @@ search_query = input('Search -- ')
 
 
 print('--------------------------------XXX--------------------------------------')
-url ="https://www.aljazeera.com/search/"+search_query
+today = datetime.now()
+if today.month == 1:
+    prev = today.replace(year=today.year-1, month=12)
+else:
+    prev = today.replace(month=today.month-1)
+
+today = today.strftime('%Y-%m-%d')
+prev_month = prev.strftime('%Y-%m-%d')
+
+url ="https://www.nytimes.com/search?dropmab=false&endDate="+today+"&lang=en&query=tesla&sort=best&startDate="+prev_month
 print(url)
 news_scraping(url)
+
+
 
 
 # url = 'https://www.india.com/'
