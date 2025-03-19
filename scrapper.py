@@ -18,9 +18,9 @@ def test_scrapability(url):
         # For example, finding all article titles
         titles = soup.find_all('h3')
         if titles:
-            print("Site appears to be scrapeable with BeautifulSoup.")
+            print("scrapable")
         else:
-            print("Content might be loaded dynamically.")
+            print("found dynamically loaded content")
     except Exception as e:
         print(f"Error: {e}")
 
@@ -53,12 +53,12 @@ def ap_news_scraping(url):
                     story_body = story.find('div', class_='RichTextStoryBody')
                     if story_body:
                         articles.append(story_body.get_text())
-                        print('✅ ==========================================')
+                        print('==========================================')
                         
                     else:
-                        print(f"❌ Story not found in Story tag")
+                        print(f"!!! Story not found in Story tag")
                 else:
-                    print(f"❌ Story tag not found")
+                    print(f"!!! Story tag not found")
                     limit+=1
                 
                 iter+=1 
@@ -81,15 +81,15 @@ def ap_news_scraping(url):
             #             print(story_body.get_text())
                         
             #         else:
-            #             print(f"❌ Story not found in Story tag")
+            #             print(f"!!! Story not found in Story tag")
             #     else:
-            #         print(f"❌ Story tag not found")
+            #         print(f"!!! Story tag not found")
             #     print('==========================================')
         else:
-            print(f"❌ Content not found in HTML: {url}")
+            print(f"!!! Content not found in HTML: {url}")
             
     except Exception as e:
-        print(f"❌ Error scraping {url}: {e}")
+        print(f"!!! Error scraping {url}: {e}")
 
 # BBC only has 10 articles to offer at maximum
 def bbc_news_scraping(url):
@@ -127,27 +127,27 @@ def bbc_news_scraping(url):
                                 for text in text_blocks:
                                     article__+=text.get_text()
                                 articles.append(article__)
-                                print('✅ =================================================')
+                                print('=================================================')
                             else:
-                                print('❌ text blocks not found')
+                                print('!!! text blocks not found')
                                 limit+=1
                         else:
-                            print('❌ article not found')
+                            print('!!! article not found')
                             limit+=1
                     else:
-                        print('❌ page doesnt exit')
+                        print('!!! page doesnt exit')
                         limit+=1
                     
                 else:
-                    print('❌ !!!!!!!!!No RESULTS!!!!!!!!!!')
+                    print('!!! !!!!!!!!!No RESULTS!!!!!!!!!!')
                 
                 iter+=1
                 
 
         else:
-            print('❌ Search not found')
+            print('!!! Search not found')
     except Exception as e:
-        print(f"❌ Error scraping {url}: {e}")
+        print(f"!!! Error scraping {url}: {e}")
 
 
 def news_scraping(url):
@@ -170,9 +170,9 @@ def news_scraping(url):
                 else:
                     print('search item not found')
         else:
-            print('❌ search list not found')
+            print('!!! search list not found')
     except Exception as e:
-        print(f"❌ Error scraping {url}: {e}")
+        print(f" Error scraping {url}: {e}")
 
 
 search_query = input('Search -- ')
