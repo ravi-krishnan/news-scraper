@@ -1,5 +1,5 @@
-# NY times have paywall issue.
 import requests
+import json
 from api import *
 from bs4 import BeautifulSoup
 from datetime import datetime
@@ -7,8 +7,11 @@ from datetime import datetime
 headers = {
         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
     }
+result = {}
 articles = []
 titles = []
+summaries = []
+sentiments = []
 
 def ap_news_scraping(url):
     iter = 0
@@ -224,13 +227,28 @@ bbc_news_scraping(bbc_url)
 
 
 
-print(len(articles))
+print('No of articles:',len(articles))
 with open("output.txt", "w") as file:
     for text in articles:
         file.write(text + "\n"+"*"*100 +'\n')
 
 for i in range(len(articles)):
     print('⭐', titles[i], '\n')
-    # print(analyze_sentiment(articles[i]))
-    print(generate_summary(articles[i]))
+    sentiments.append(analyze_sentiment(articles[i]))
+    summaries.append(generate_summary(articles[i]))
     print('')
+
+
+
+result["Company"] = search_query
+result["Articles"] = [{
+                        "Title": titles[i],
+                        "Summary": summaries[i],
+                        "Sentiment":sentiments[i]
+                        }
+                      for i in range(len(articles))]
+
+with open('result.json', 'w') as file:
+    json.dump(result, file, indent=4)
+
+print("JSON file created successfully!")
