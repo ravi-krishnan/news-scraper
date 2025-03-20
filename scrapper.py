@@ -1,7 +1,7 @@
 # NY times have paywall issue.
 import requests
+from api import analyze_sentiment
 from bs4 import BeautifulSoup
-import time
 from datetime import datetime
 
 headers = {
@@ -75,17 +75,19 @@ def ap_news_scraping(url):
                             for para in story_para:
                                 article__ += para.get_text() + '\n'
                             articles.append(article__)
-                            print('==========================================')
+                            print('✅successfully scraped')
+                            print('')
                         else:
-                            print('story paragraphs not found')
+                            print('❌story paragraphs not found')
+                            print('')
                         
                         
                     else:
-                        print(f"!!! Story not found in Story tag")
-                        print('==========================================')
+                        print(f"❌ Story not found in Story tag")
+                        print('')
                 else:
-                    print(f"!!! Story tag not found")
-                    print('==========================================')
+                    print(f"❌ Story tag not found")
+                    print('')
                     limit+=1
                 
                 iter+=1 
@@ -108,17 +110,17 @@ def ap_news_scraping(url):
             #             print(story_body.get_text())
                         
             #         else:
-            #             print(f"!!! Story not found in Story tag")
+            #             print(f"❌ Story not found in Story tag")
             #     else:
-            #         print(f"!!! Story tag not found")
+            #         print(f"❌ Story tag not found")
             #     print('==========================================')
         else:
-            print(f"!!! Content not found in HTML: {url}")
-            print('==========================================')
+            print(f"❌ Content not found in HTML: {url}")
+            print('')
             
     except Exception as e:
-        print(f"!!! Error scraping {url}: {e}")
-        print('==========================================')
+        print(f"❌ Error scraping {url}: {e}")
+        print('')
 
 # BBC only has 10 articles to offer at maximum
 def bbc_news_scraping(url):
@@ -156,27 +158,34 @@ def bbc_news_scraping(url):
                                 for text in text_blocks:
                                     article__+=text.get_text()
                                 articles.append(article__)
-                                print('=================================================')
+                                print('✅ successfully scraped')
+                                print('')
                             else:
-                                print('!!! text blocks not found')
+                                print('❌ text blocks not found')
+                                print('')
                                 limit+=1
                         else:
-                            print('!!! article not found')
+                            print('❌ article not found')
+                            print('')
                             limit+=1
                     else:
-                        print('!!! page doesnt exit')
+                        print('❌ page doesnt exit')
+                        print('')
                         limit+=1
                     
                 else:
-                    print('!!! !!!!!!!!!No RESULTS!!!!!!!!!!')
+                    print('❌ !!!!!!No RESULTS!!!!!!!!!!')
+                    print('')
                 
                 iter+=1
                 
 
         else:
-            print('!!! Search not found')
+            print('❌ Search not found')
+            print('')
     except Exception as e:
-        print(f"!!! Error scraping {url}: {e}")
+        print(f"❌ Error scraping {url}: {e}")
+        print('')
 
 
 def news_scraping(url):
@@ -223,17 +232,17 @@ def news_scraping(url):
 
 search_query = input('Search -- ')
 print('--------------------------------AP NEWS--------------------------------------')
-ap_url="https://apnews.com/search?q="+search_query+"&s=0"
+ap_url="https://apnews.com/search?q="+search_query+"+company&s=0"
 print(ap_url,'\n')
 ap_news_scraping(ap_url)
 
 print('--------------------------------BBC--------------------------------------')
-bbc_url ="https://www.bbc.com/search?q="+search_query
+bbc_url ="https://www.bbc.com/search?q="+search_query+"+company"
 print(bbc_url, '\n')
 bbc_news_scraping(bbc_url)
 
 
-# print('--------------------------------XXX--------------------------------------')
+# print('--------------------------------NEWS--------------------------------------')
 # today = datetime.now()
 # if today.month == 1:
 #     prev = today.replace(year=today.year-1, month=12)
@@ -257,3 +266,6 @@ print(len(articles))
 with open("output.txt", "w") as file:
     for text in articles:
         file.write(text + "\n"+"*"*100 +'\n')
+
+for i in articles:
+    print(analyze_sentiment(i))
