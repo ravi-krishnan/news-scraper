@@ -42,10 +42,25 @@ def ap_news_scraping(url):
             while iter < limit:
                 item = item_divs[iter]
                 search_item = item.find('div', class_='PagePromo-content')
+
+                date_header = item.find('div', class_='PagePromo-date')
+                bsp_timestamp = date_header.find('bsp-timestamp')
+                timestamp_ms = bsp_timestamp['data-timestamp']
+                print(timestamp_ms)
+
+                # add fn
+                timestamp_s = int(timestamp_ms) / 1000
+                dt_object = datetime.fromtimestamp(timestamp_s)
+                human_readable_date = dt_object.strftime("%Y-%m-%d")
+                print(human_readable_date)
+
+
                 link = search_item.find('a', class_='Link')
                 span = link.find('span')
+
                 print(span.get_text())
                 print(link['href'])
+
                 response = requests.get(link['href'], headers=headers)
                 page = BeautifulSoup(response.text, 'html.parser')
                 
@@ -53,13 +68,24 @@ def ap_news_scraping(url):
                 if story:
                     story_body = story.find('div', class_='RichTextStoryBody')
                     if story_body:
-                        articles.append(story_body.get_text())
-                        print('==========================================')
+                        story_para = story_body.find_all('p')
+                        if story_para:
+                            article__=''
+                            article__+=human_readable_date+'\n'
+                            for para in story_para:
+                                article__ += para.get_text() + '\n'
+                            articles.append(article__)
+                            print('==========================================')
+                        else:
+                            print('story paragraphs not found')
+                        
                         
                     else:
                         print(f"!!! Story not found in Story tag")
+                        print('==========================================')
                 else:
                     print(f"!!! Story tag not found")
+                    print('==========================================')
                     limit+=1
                 
                 iter+=1 
@@ -88,9 +114,11 @@ def ap_news_scraping(url):
             #     print('==========================================')
         else:
             print(f"!!! Content not found in HTML: {url}")
+            print('==========================================')
             
     except Exception as e:
         print(f"!!! Error scraping {url}: {e}")
+        print('==========================================')
 
 # BBC only has 10 articles to offer at maximum
 def bbc_news_scraping(url):
@@ -100,7 +128,7 @@ def bbc_news_scraping(url):
         response = requests.get(url, headers=headers)
         soup = BeautifulSoup(response.text, 'html.parser')
         search_list = soup.find_all('div', class_="sc-c6f6255e-0 eGcloy")
-        print(search_list)
+        # print(search_list)
         if search_list:
             
             while iter < limit:
@@ -193,31 +221,31 @@ def news_scraping(url):
         print(f" Error scraping {url}: {e}")
 
 
-# search_query = input('Search -- ')
-# print('--------------------------------AP NEWS--------------------------------------')
-# ap_url="https://apnews.com/search?q="+search_query+"&s=0"
-# print(ap_url)
-# ap_news_scraping(ap_url)
+search_query = input('Search -- ')
+print('--------------------------------AP NEWS--------------------------------------')
+ap_url="https://apnews.com/search?q="+search_query+"&s=0"
+print(ap_url,'\n')
+ap_news_scraping(ap_url)
 
-# print('--------------------------------BBC--------------------------------------')
-# bbc_url ="https://www.bbc.com/search?q="+search_query
-# print(bbc_url)
-# bbc_news_scraping(bbc_url)
+print('--------------------------------BBC--------------------------------------')
+bbc_url ="https://www.bbc.com/search?q="+search_query
+print(bbc_url, '\n')
+bbc_news_scraping(bbc_url)
 
 
-print('--------------------------------XXX--------------------------------------')
-today = datetime.now()
-if today.month == 1:
-    prev = today.replace(year=today.year-1, month=12)
-else:
-    prev = today.replace(month=today.month-1)
+# print('--------------------------------XXX--------------------------------------')
+# today = datetime.now()
+# if today.month == 1:
+#     prev = today.replace(year=today.year-1, month=12)
+# else:
+#     prev = today.replace(month=today.month-1)
 
-today = today.strftime('%Y-%m-%d')
-prev_month = prev.strftime('%Y-%m-%d')
+# today = today.strftime('%Y-%m-%d')
+# prev_month = prev.strftime('%Y-%m-%d')
 
-url ="https://www.nytimes.com/search?dropmab=false&endDate="+today+"&lang=en&query=tesla&sort=best&startDate="+prev_month
-print(url)
-news_scraping(url)
+# url ="https://www.nytimes.com/search?dropmab=false&endDate="+today+"&lang=en&query=tesla&sort=best&startDate="+prev_month
+# print(url)
+# news_scraping(url)
 
 
 
@@ -226,3 +254,6 @@ news_scraping(url)
 # test_scrapability(url)
 
 print(len(articles))
+with open("output.txt", "w") as file:
+    for text in articles:
+        file.write(text + "\n"+"*"*100 +'\n')
