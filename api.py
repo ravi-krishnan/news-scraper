@@ -14,12 +14,12 @@ summarizer = pipeline("summarization", model="facebook/bart-large-cnn")
 def topic_extractor(text):
 
     prompt = '''
-        From the article given below, find out the topics from the article
+        Extract the main topics from this article and return ONLY a Python list of topics in the exact format
+        ["topic1", "topic2", "topic3"]. Do not include any explanations, code, or additional text in your response.
+        Topics should be at most 3 words. These topics are further used to check for common between other articles.
+        So topics should be common topics. Not descriptive brief topics.
 
-        The result should be all the topics inside double qoutes and in a python list
-        
-        Example Output should be = ["topic 1", "topic 2", "topic 3"]
-        Article=
+        Article:
     '''
 
     prompt+=text
