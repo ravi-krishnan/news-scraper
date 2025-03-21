@@ -1,0 +1,41 @@
+{
+    "Company": "tesla",
+    "Articles": [
+        {
+            "Title": "Trump\u2019s efforts to help Tesla could hurt it instead",
+            "Summary": "Presidential tweets his support for Tesla CEO Elon Musk. Trump calls Musk a \u2018great guy\u2019 and says he is \u2018proud\u2019 of him.",
+            "Topics": "```python\nimport re\n\nArticle = \"Presidential tweets his support for Tesla CEO Elon Musk. Trump calls Musk a \u2018great guy\u2019 and says he is \u2018proud\u2019 of him.\"\n\ntopics = re.findall(r\"\u2018(.*?)\u2019\", Article)  #Finds all text within single quotes \u2018\u2026\u2019\n\nprint(topics) \n```\n\nThis code will output:\n\n```\n['great guy', 'proud']\n```\n\nIf the article actually used double quotes instead of single quotes,  change `r\"\u2018(.*?)\u2019\"` to `r\"\\\"(.*?)\\\"\"` in the `re.findall()` function.  The output would then reflect the topics enclosed in double quotes.  Because the provided example uses single quotes, the answer reflects that.\n",
+            "Sentiment": "neutral"
+        },
+        {
+            "Title": "Musk\u2019s embrace of right-wing politics risks turning off car buyers and sinking Tesla\u2019s stock",
+            "Summary": "Tesla sales plunged 45% in Europe in January, according to research firm Jato Dynamics. That comes after a report of falling sales in California, its biggest U.S. market. \u201cI don\u2019t even want to drive it,\u201d said Model 3 owner John Parnell.",
+            "Topics": "```python\nimport re\n\nArticle= \"\"\"Tesla sales plunged 45% in Europe in January, according to research firm Jato Dynamics. That comes after a report of falling sales in California, its biggest U.S. market. \u201cI don\u2019t even want to drive it,\u201d said Model 3 owner John Parnell.\"\"\"\n\ntopics = re.findall(r'\"(.*?)\"', Article) \nprint(topics)\n```\n\nThis code will output:\n\n```\n['I don\u2019t even want to drive it']\n```\n",
+            "Sentiment": "negative"
+        },
+        {
+            "Title": "Musk\u2019s Tesla has silenced its critics in China \u2014 by suing its own customers",
+            "Summary": "A Chinese court ordered Zhang to pay more than $23,000 in damages and publicly apologize to the $1.1 trillion company. Over the last four years, Tesla has sued at least six car owners in China.Tesla won all 11 cases for which AP could determine the verdicts. Two judgments, including Zhang\u2019s, are on appeal. One case was settled out of court.Tesla officials in China and the United States did not reply to requests for comment. Tesla has profited from the largesse of the Chinese state, winning unprecedented regulatory benefits, below-market rate loans and large tax breaks.Tesla won nearly 90% of civil cases over safety, quality or contract disputes, AP finds. Journalists told AP they have been instructed to avoid negative coverage of the automaker.",
+            "Topics": "```python\nimport re\n\nArticle= \"\"\"A Chinese court ordered Zhang to pay more than $23,000 in damages and publicly apologize to the $1.1 trillion company. Over the last four years, Tesla has sued at least six car owners in China.Tesla won all 11 cases for which AP could determine the verdicts. Two judgments, including Zhang\u2019s, are on appeal. One case was settled out of court.Tesla officials in China and the United States did not reply to requests for comment. Tesla has profited from the largesse of the Chinese state, winning unprecedented regulatory benefits, below-market rate loans and large tax breaks.Tesla won nearly 90% of civil cases over safety, quality or contract disputes, AP finds. Journalists told AP they have been instructed to avoid negative coverage of the automaker.\"\"\"\n\ntopics = re.findall(r'\"(.*?)\"', Article) #Finds all strings enclosed in double quotes\n\nprint(topics) # Output will be an empty list [] because there are no topics in double quotes in the provided text.\n\n```\n\nThe provided text does not contain any topics within double quotes.  Therefore, the output of the code will be an empty list.  If the article were to contain topics in double quotes (e.g.,  \"Tesla Lawsuits in China\", \"Chinese Government Support for Tesla\"), the code would correctly extract them.\n",
+            "Sentiment": "negative"
+        },
+        {
+            "Title": "Trump says anti-Tesla protesters will face 'hell'",
+            "Summary": "People protesting against Tesla should be labelled domestic terrorists, says President Donald Trump. Trump sat in the driver's seat of a brand new red Tesla that he said he planned to buy, with Elon Musk in the passenger seat.",
+            "Topics": "```python\nimport re\n\nArticle = \"People protesting against Tesla should be labelled domestic terrorists, says President Donald Trump. Trump sat in the driver's seat of a brand new red Tesla that he said he planned to buy, with Elon Musk in the passenger seat.\"\n\ntopics = re.findall(r'\"(.*?)\"', Article)  #Finds all strings enclosed in double quotes\n\nprint(topics) # Output: []\n\n#There are no topics in double quotes in the provided text.  The example output format is misleading as it implies the presence of quoted topics.\n```\n",
+            "Sentiment": "negative"
+        },
+        {
+            "Title": "Tesla makes largest-ever Cybertruck recall",
+            "Summary": "The issue affects more than 46,000 trucks made starting in November 2023. It comes as Tesla grapples with falling sales amid a backlash against the firm.",
+            "Topics": "```python\nimport re\n\nArticle = \"The issue affects more than 46,000 trucks made starting in November 2023. It comes as Tesla grapples with falling sales amid a backlash against the firm.\"\n\n# This regex finds all strings enclosed in double quotes.  Since there are none in the provided text, the list will be empty.\ntopics = re.findall(r'\"(.*?)\"', Article) \n\nprint(topics) # Output: []\n```\n",
+            "Sentiment": "negative"
+        },
+        {
+            "Title": "Tesla vandals face up to 20 years in prison, says attorney general",
+            "Summary": "US Attorney General Pam Bondi said the damage to Tesla cars, dealerships and charging stations was \"domestic terrorism\" There is no specific US law against domestic terrorism, but prosecutors can request longer prison sentences.",
+            "Topics": "```python\nimport re\n\nArticle = \"US Attorney General Pam Bondi said the damage to Tesla cars, dealerships and charging stations was \\\"domestic terrorism\\\" There is no specific US law against domestic terrorism, but prosecutors can request longer prison sentences.\"\n\ntopics = re.findall(r'\"(.*?)\"', Article)\nprint(topics)\n```\n\nThis code will output:\n\n```\n['domestic terrorism']\n```\n",
+            "Sentiment": "negative"
+        }
+    ]
+}

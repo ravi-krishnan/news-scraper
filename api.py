@@ -1,8 +1,32 @@
 from transformers import pipeline
+from dotenv import load_dotenv
+from google import genai
+import os
 
-# Initialize sentiment analysis pipeline with DistilBERT
+load_dotenv()
+client = genai.Client(api_key=os.getenv('GEMINI_API_KEY'))
+
+
 sentiment_analyzer = pipeline("sentiment-analysis", model="distilbert-base-uncased-finetuned-sst-2-english")
 summarizer = pipeline("summarization", model="facebook/bart-large-cnn")
+
+
+def topic_extractor(text):
+
+    prompt = '''
+        From the article given below, find out the topics from the article
+
+        The result should be all the topics inside double qoutes and in a python list
+        
+        Example Output should be = ["topic 1", "topic 2", "topic 3"]
+        Article=
+    '''
+
+    prompt+=text
+    response = client.models.generate_content(
+        model='gemini-1.5-flash', contents=prompt, 
+    )
+    return (response.text)
 
 
 def analyze_sentiment(text, max_length=512):
@@ -26,8 +50,6 @@ def analyze_sentiment(text, max_length=512):
     else:
         return "neutral"
 
-
-# Initialize summarization pipeline
 
 def generate_summary(text, max_length=300):
 
