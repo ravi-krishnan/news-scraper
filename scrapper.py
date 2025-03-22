@@ -235,7 +235,7 @@ with open("articles.txt", "w") as file:
         file.write(text + "\n"+"*"*100 +'\n')
 
 for i in range(len(articles)):
-    print('⭐', titles[i], '\n')
+    print('⭐', titles[i])
     sentiment = analyze_sentiment(articles[i])
     summary = generate_summary(articles[i])
     topic = topic_extractor(summary)
@@ -244,6 +244,17 @@ for i in range(len(articles)):
     topics.append(topic)
     print('')
 
+
+print(summaries)
+
+hc_summaries = [
+    'Presidential tweets his support for Tesla CEO Elon Musk. Trump calls Musk a ‘great guy’ and says he is ‘proud’ of him.',
+    'Tesla sales plunged 45% in Europe in January, according to research firm Jato Dynamics. That comes after a report of falling sales in California, its biggest U.S. market. “I don’t even want to drive it,” said Model 3 owner John Parnell.',
+    'A Chinese court ordered Zhang to pay more than $23,000 in damages and publicly apologize to the $1.1 trillion company. Over the last four years, Tesla has sued at least six car owners in China.Tesla won all 11 cases for which AP could determine the verdicts. Two judgments, including Zhang’s, are on appeal. One case was settled out of court.Tesla officials in China and the United States did not reply to requests for comment. Tesla has profited from the largesse of the Chinese state, winning unprecedented regulatory benefits, below-market rate loans and large tax breaks.Tesla won nearly 90% of civil cases over safety, quality or contract disputes, AP finds. Journalists told AP they have been instructed to avoid negative coverage of the automaker.',
+    "People protesting against Tesla should be labelled domestic terrorists, says President Donald Trump. Trump sat in the driver's seat of a brand new red Tesla that he said he planned to buy, with Elon Musk in the passenger seat.",
+    'The issue affects more than 46,000 trucks made starting in November 2023. It comes as Tesla grapples with falling sales amid a backlash against the firm.',
+    'US Attorney General Pam Bondi said the damage to Tesla cars, dealerships and charging stations was "domestic terrorism" There is no specific US law against domestic terrorism, but prosecutors can request longer prison sentences.'
+    ]
 
 
 result["Company"] = search_query
@@ -260,3 +271,4 @@ with open('result.json', 'w') as file:
     json.dump(result, file, indent=4)
 
 print("JSON file created successfully!")
+print(result)
