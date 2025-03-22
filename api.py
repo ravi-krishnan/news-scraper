@@ -3,6 +3,7 @@ from dotenv import load_dotenv
 from google import genai
 import os
 from itertools import combinations
+import time
 
 load_dotenv()
 client = genai.Client(api_key=os.getenv('GEMINI_API_KEY'))
@@ -13,7 +14,7 @@ summarizer = pipeline("summarization", model="facebook/bart-large-cnn")
 
 
 def topic_extractor(text):
-
+    # time.sleep(3)
     prompt = '''
         Extract the main topics from this article and return ONLY a Python list of topics in the exact format
         ["topic1", "topic2", "topic3"]. Do not include any explanations, code, or additional text in your response.
@@ -27,6 +28,7 @@ def topic_extractor(text):
     response = client.models.generate_content(
         model='gemini-1.5-flash', contents=prompt, 
     )
+    print('*\n')
     return (response.text)
 
 
@@ -82,7 +84,7 @@ def generate_summary(text, max_length=300):
         '''
         combined_summary+=summary[0]['summary_text']
     # print('no of chunks',len(chunks))
-    print(combined_summary, '\n')
+    # print(combined_summary, '\n')
 
     if len(combined_summary.split()) > 1024:
         return generate_summary(combined_summary, max_length)
@@ -101,7 +103,9 @@ def comparative_analysis(articles):
     count=0
     c_analysis=[]
     for i, j in combinations(range(len(articles)), 2):
-        count+=1
+        if count%10 == 0:
+            print('waiting for api to refresh')
+            time.sleep(60)
         prompt = f'''
                     Do comparative analysis on these two articles
                     Article {i+1} = {articles[i]},
@@ -118,6 +122,8 @@ def comparative_analysis(articles):
         response = client.models.generate_content(
             model='gemini-1.5-flash', contents=prompt, 
         )
+        count+=1
+        print(count)
         c_analysis.append(response.text)
     return c_analysis
 
@@ -129,7 +135,3 @@ hc_summaries = [
     'The issue affects more than 46,000 trucks made starting in November 2023. It comes as Tesla grapples with falling sales amid a backlash against the firm.',
     'US Attorney General Pam Bondi said the damage to Tesla cars, dealerships and charging stations was "domestic terrorism" There is no specific US law against domestic terrorism, but prosecutors can request longer prison sentences.'
     ]
-
-for i in comparative_analysis(hc_summaries):
-    print(i,'\n')
-        
