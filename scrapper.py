@@ -30,54 +30,59 @@ def bbc_news_scraping(url):
         if search_list:
             
             while iter < limit:
-                item = search_list[iter]
-                search_item = item.find('a', class_="sc-2e6baa30-0 gILusN")
-                
-                if search_item:
-                    title = item.find('h2', class_ ="sc-87075214-3 cXFiLO")
-                    if search_item['href'].startswith('https'):
-                        link = search_item['href']
-                    
-                    else:
-                        link = 'https://www.bbc.com'+search_item['href']
-                    
-                    print(title.get_text())
-                    print(link)
-                    response = requests.get(link, headers=headers)
-                    page = BeautifulSoup(response.text, 'html.parser')
-                    if page:
-                        article = page.find('article')
-                        if article:
-                            text_blocks = article.find_all('div', class_='sc-18fde0d6-0 dlWCEZ')
-                            article__ = ''
-                            titles.append(title.get_text())
-                            if text_blocks:
-                                for text in text_blocks:
-                                    article__+=text.get_text()
+                if len(articles) == n_articles:
+                    iter = limit+1
 
-                                articles.append(article__)
+                else:
 
-                                print('✅ successfully scraped')
-                                print('')
+                    item = search_list[iter]
+                    search_item = item.find('a', class_="sc-2e6baa30-0 gILusN")
+                    
+                    if search_item:
+                        title = item.find('h2', class_ ="sc-87075214-3 cXFiLO")
+                        if search_item['href'].startswith('https'):
+                            link = search_item['href']
+                        
+                        else:
+                            link = 'https://www.bbc.com'+search_item['href']
+                        
+                        print(title.get_text())
+                        print(link)
+                        response = requests.get(link, headers=headers)
+                        page = BeautifulSoup(response.text, 'html.parser')
+                        if page:
+                            article = page.find('article')
+                            if article:
+                                text_blocks = article.find_all('div', class_='sc-18fde0d6-0 dlWCEZ')
+                                article__ = ''
+                                titles.append(title.get_text())
+                                if text_blocks:
+                                    for text in text_blocks:
+                                        article__+=text.get_text()
+
+                                    articles.append(article__)
+
+                                    print('✅ successfully scraped')
+                                    print('')
+                                else:
+                                    print('❌ text blocks not found')
+                                    print('')
+                                    limit+=1
                             else:
-                                print('❌ text blocks not found')
+                                print('❌ article not found')
                                 print('')
                                 limit+=1
                         else:
-                            print('❌ article not found')
+                            print('❌ page doesnt exit')
                             print('')
                             limit+=1
+                        
                     else:
-                        print('❌ page doesnt exit')
+                        print('❌ !!!!!!No RESULTS!!!!!!!!!!')
                         print('')
-                        limit+=1
                     
-                else:
-                    print('❌ !!!!!!No RESULTS!!!!!!!!!!')
-                    print('')
-                
-                iter+=1
-                
+                    iter+=1
+                    
 
         else:
             print('❌ Search not found')
@@ -210,13 +215,13 @@ def news_scraping(url):
     except Exception as e:
         print(f" Error scraping {url}: {e}")
 
+search_query = 'Deloitte'
+# search_query = input('Search -- ')
 
-search_query = input('Search -- ')
-
-print('--------------------------------BBC--------------------------------------')
-bbc_url ="https://www.bbc.com/search?q="+search_query+"+company"
-print(bbc_url, '\n')
-bbc_news_scraping(bbc_url)
+# print('--------------------------------BBC--------------------------------------')
+# bbc_url ="https://www.bbc.com/search?q="+search_query+"+company"
+# print(bbc_url, '\n')
+# bbc_news_scraping(bbc_url, n_articles)
 
 print('--------------------------------AP NEWS--------------------------------------')
 ap_url="https://apnews.com/search?q="+search_query+"+company&s=0"
@@ -276,14 +281,13 @@ sentiment_counter = {}
 for sentiment in sentiments:
     sentiment_counter[sentiment] = sentiment_counter.get(sentiment, 0) + 1
 
-print(sentiment_counter)
 result["Comparative Sentiment Score"] = {
     "Sentiment Distribution" : sentiment_counter,
     "Coverage Differences" : comparatie_analysis_result,
-    # "Topic Overlap" : {
-    #     "Common Topics" : ,
+}
 
-    # }
+result["Topic Overlap"] = {
+    "Common Topics": [],
 }
 
 with open('result.json', 'w') as file:

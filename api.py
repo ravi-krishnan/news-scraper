@@ -10,7 +10,11 @@ import json
 import nltk
 from nltk.corpus import stopwords
 from nltk.tokenize import sent_tokenize
+from nltk.corpus import wordnet
 from transformers import pipeline
+from sentence_transformers import SentenceTransformer, util
+import numpy as np
+
 
 # Download necessary NLTK resources
 
@@ -25,14 +29,17 @@ def load_nltk():
     nltk.download('punkt')
     nltk.download('punkt_tab')
     nltk.download('stopwords')
+    nltk.download('wordnet')
 
 def topic_extractor(text):
     # time.sleep(3)
     prompt = '''
-        Extract the main topics from this article and return ONLY a Python list of topics in the exact format
-        ["topic1", "topic2", "topic3"]. Do not include any explanations, code, or additional text in your response.
+        Extract the main topics from this article and return ONLY a list of topics in the exact format
+        ["Topic1", "Topic2", "Topic3"]. Do not include any explanations, code, or additional text in your response.
         Topics should be at most 3 words. These topics are further used to check for common between other articles.
         So topics should be common topics. Not descriptive brief topics.
+        The first letter of each topic should be capitalized.
+
 
         Article:
     '''
@@ -103,23 +110,23 @@ def generate_summary(text, company,  max_sentences=3):
     return ' '.join(top_sentences)
 
 def comparative_analysis(articles):
-    count=0
+    count = 0
     now = datetime.now()
     print('Time at the start', now.minute, now.second)
     print('sleep for ', 60-now.second,' seconds')
     time.sleep(60-now.second+3)
     new_minute = datetime.now()
     print('ready at', new_minute.minute, new_minute.second)
-    c_analysis=[]
+    c_analysis = []
+    
     for i, j in combinations(range(len(articles)), 2):
-
-        if count%15 == 0 and count!=0:
+        if count % 15 == 0 and count != 0:
             now = datetime.now()
             print(f'15 requests served at -  {now.hour}:{now.minute}:{now.second}')
             
             print('wait for ', 60-now.second, 'seconds to refresh the api request limit')
             time.sleep(60 - now.second + 3)
-            
+        
         prompt = f"""
                     Do a comparative analysis on these two articles:
                     Article {i+1}: {articles[i]}
@@ -133,24 +140,90 @@ def comparative_analysis(articles):
 
                     Here's an example of the a scenario and the desired output:
                     Suppose Article{i+1} was about Tesla company's strong sales and performance and 
-                    Article {j+1} was anout the regulatory challenges faced by the company.
+                    Article {j+1} was about the regulatory challenges faced by the company.
 
                     The output should look like this:
 
-                    {{
+                    {
                         "Comparison": "In contrast to Article {j+1}, which outlines regulatory challenges, Article {i+1} highlights Tesla's strong sales performance.",
                         "Impact": "While the regulatory issues raised in Article {j+1} may cause concern, Article {i+1}'s sales data suggests continued market growth."
-                    }}
+                    }
 
-                    Remember, only provide the string output. Avoid any additional text.
-                """
+                    Remember, only provide the JSON output. Avoid any additional text.
+                    """
+
         
         response = client.models.generate_content(
             model='gemini-1.5-flash', contents=prompt, 
         )
-        count+=1
-        c_analysis.append(response.text)
-    return c_analysis
+        count += 1
+        
+        # Clean up the response
+        text = response.text.replace("``````", "").replace("\n", "").replace("\\", "").strip()
+        
+        try:
+            # Load as JSON
+            comparison = json.loads("{" + text + "}")
+            c_analysis.append(comparison)
+        except json.JSONDecodeError:
+            print(f"Failed to parse response: {text}")
+            c_analysis.append({"Comparison": "Failed to parse", "Impact": "Failed to parse"})
+
+
+
+def find_common_and_unique_topics_flexible(topics_list, similarity_threshold=0.7):
+    model = SentenceTransformer('all-MiniLM-L6-v2')
+    common_topics = []
+    unique_topics_lists = []
+
+    # Initialize unique topics lists
+    for i in range(len(topics_list)):
+        unique_topics_lists.append(list(topics_list[i]))
+
+    # Generate embeddings for all topics
+    all_topics = [topic for sublist in topics_list for topic in sublist]
+    embeddings = model.encode(all_topics, convert_to_tensor=True)
+
+    # Find common topics using embeddings
+    for i in range(len(topics_list)):
+        for j in range(i + 1, len(topics_list)):
+            for topic1 in topics_list[i]:
+                for topic2 in topics_list[j]:
+                    embedding1 = embeddings[all_topics.index(topic1)]
+                    embedding2 = embeddings[all_topics.index(topic2)]
+                    cosine_similarity = util.cos_sim(embedding1, embedding2).item()
+
+                    if cosine_similarity >= similarity_threshold and topic1 != topic2:
+                        # Check if topics are already in a common group
+                        found_group1 = None
+                        found_group2 = None
+                        for group in common_topics:
+                            if topic1 in group:
+                                found_group1 = group
+                            if topic2 in group:
+                                found_group2 = group
+
+                        if found_group1 and found_group2:
+                            if found_group1 != found_group2:
+                                # Merge the groups
+                                common_topics.remove(found_group1)
+                                common_topics.remove(found_group2)
+                                common_topics.append(list(set(found_group1 + found_group2)))
+                        elif found_group1:
+                            found_group1.append(topic2)
+                        elif found_group2:
+                            found_group2.append(topic1)
+                        else:
+                            common_topics.append([topic1, topic2])
+
+    # Remove common topics from unique topics lists
+    for group in common_topics:
+        for topic in group:
+            for unique_list in unique_topics_lists:
+                if topic in unique_list:
+                    unique_list.remove(topic)
+
+    return common_topics, unique_topics_lists
 
 hc_summaries = [
 
