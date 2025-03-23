@@ -5,6 +5,9 @@ import os
 from itertools import combinations
 import time
 from datetime import datetime
+import re
+import json
+import spacy
 
 load_dotenv()
 client = genai.Client(api_key=os.getenv('GEMINI_API_KEY'))
@@ -12,7 +15,7 @@ client = genai.Client(api_key=os.getenv('GEMINI_API_KEY'))
 
 sentiment_analyzer = pipeline("sentiment-analysis", model="distilbert-base-uncased-finetuned-sst-2-english")
 summarizer = pipeline("summarization", model="facebook/bart-large-cnn")
-
+nlp = spacy.load("en_core_web_sm")
 
 def topic_extractor(text):
     # time.sleep(3)
@@ -29,8 +32,19 @@ def topic_extractor(text):
     response = client.models.generate_content(
         model='gemini-1.5-flash', contents=prompt, 
     )
-    print('*\n')
-    return (response.text)
+    cleaned_response = response.text.strip()
+    
+    # Remove unwanted characters and convert to JSON list
+    try:
+        # Remove backslashes and other unwanted characters
+        cleaned_response = re.sub(r'\\n|\\t|\\r|\\b|\\f|\\v|\\a|\\x', '', cleaned_response)
+        cleaned_response = re.sub(r'``````', '', cleaned_response, flags=re.DOTALL)        
+        # Load as JSON
+        topics = json.loads(cleaned_response)
+        return topics
+    except json.JSONDecodeError:
+        print(f"Failed to parse response: {cleaned_response}")
+        return []
 
 
 def analyze_sentiment(text, max_length=512):
@@ -55,50 +69,46 @@ def analyze_sentiment(text, max_length=512):
         return "Neutral"
 
 
-def generate_summary(text, max_length=300):
-
-    words = text.split()
-    # if len(words) <= 1024:  # BART's max input length
-    #     summary = summarizer(text, max_length=max_length, min_length=30, do_sample=False)
-    #     return summary[0]['summary_text']
-    # else:
-    # For very long texts, summarize chunks and then summarize the combined summaries
-    #     chunks = [' '.join(words[i:i+1024]) for i in range(0, len(words), 1024)]
-    #     summaries = [summarizer(chunk, max_length=100, min_length=30, do_sample=False)[0]['summary_text'] for chunk in chunks]
-    #     combined_summary = ' '.join(summaries)
+def generate_summary(text, company,  max_length=300):
+    doc = nlp(text)
+    
+    # Identify sentences containing the company name
+    company_sentences = [sent.text for sent in doc.sents if company.lower() in sent.text.lower()]
+    
+    # If no sentences mention the company, use the entire text
+    if not company_sentences:
+        company_text = text
+    else:
+        # Combine sentences into a single text block
+        company_text = ' '.join(company_sentences)
+        
+        # If the combined text is too short, expand to nearby sentences
+        if len(company_text.split()) < 50:
+            expanded_text = []
+            for sent in doc.sents:
+                if company.lower() in sent.text.lower():
+                    # Add the sentence and its neighbors
+                    idx = list(doc.sents).index(sent)
+                    for i in range(max(0, idx-1), min(idx+2, len(doc.sents))):
+                        expanded_text.append(doc.sents[i].text)
+            company_text = ' '.join(expanded_text)
+    
+    # Summarize the company-specific text
     chunks = []
     token_limit = 1024
-    for i in range(0, len(words), token_limit):
-        chunk = ''.join(text[i: i+token_limit])
-        # print(chunk, '\n ==================== \n')
+    for i in range(0, len(company_text), token_limit):
+        chunk = company_text[i: i+token_limit]
         chunks.append(chunk)
     
     combined_summary = ''
     for chunk in chunks:
         summary = summarizer(chunk, max_length=200, min_length=30, do_sample=False)
-        # print(summary)
-        '''
-            summary format : 
-                [{'summary_text': 'Tesla sales plunged 45% in Europe in January, 
-                according to research firm Jato Dynamics. That comes after a report of falling sales in California,
-                its biggest U.S. market. “I don’t even want to drive it,” said Model 3 owner John Parnell.'}]
-        '''
-        combined_summary+=summary[0]['summary_text']
-    # print('no of chunks',len(chunks))
-    # print(combined_summary, '\n')
-
+        combined_summary += summary[0]['summary_text']
+    
     if len(combined_summary.split()) > 1024:
-        return generate_summary(combined_summary, max_length)
+        return generate_summary(combined_summary, company, max_length)
     else:
         return combined_summary
-        
-        # If the combined summary is still too long, summarize it again
-        # if len(combined_summary.split()) > 1024:
-        #     return generate_summary(combined_summary, max_length)
-        # else:
-        #     final_summary = summarizer(combined_summary, max_length=max_length, min_length=30, do_sample=False)
-        #     return final_summary[0]['summary_text']
-
 
 def comparative_analysis(articles):
     count=0

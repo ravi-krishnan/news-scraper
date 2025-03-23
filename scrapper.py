@@ -250,8 +250,8 @@ with open("articles.txt", "w") as file:
 
 for i in range(len(articles)):
     print('⭐', titles[i])
-    sentiment = analyze_sentiment(articles[i])
-    summary = generate_summary(articles[i])
+    summary = generate_summary(articles[i], search_query+' company')
+    sentiment = analyze_sentiment(summary)
     topic = topic_extractor(summary)
     sentiments.append(sentiment)
     summaries.append(summary)
