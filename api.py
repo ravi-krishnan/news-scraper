@@ -7,7 +7,12 @@ import time
 from datetime import datetime
 import re
 import json
-import spacy
+import nltk
+from nltk.corpus import stopwords
+from nltk.tokenize import sent_tokenize
+from transformers import pipeline
+
+# Download necessary NLTK resources
 
 load_dotenv()
 client = genai.Client(api_key=os.getenv('GEMINI_API_KEY'))
@@ -15,7 +20,11 @@ client = genai.Client(api_key=os.getenv('GEMINI_API_KEY'))
 
 sentiment_analyzer = pipeline("sentiment-analysis", model="distilbert-base-uncased-finetuned-sst-2-english")
 summarizer = pipeline("summarization", model="facebook/bart-large-cnn")
-nlp = spacy.load("en_core_web_sm")
+
+def load_nltk():
+    nltk.download('punkt')
+    nltk.download('punkt_tab')
+    nltk.download('stopwords')
 
 def topic_extractor(text):
     # time.sleep(3)
@@ -69,53 +78,36 @@ def analyze_sentiment(text, max_length=512):
         return "Neutral"
 
 
-def generate_summary(text, company,  max_length=300):
-    doc = nlp(text)
+def generate_summary(text, company,  max_sentences=3):
+    # Tokenize sentences
+    sentences = sent_tokenize(text)
     
-    # Identify sentences containing the company name
-    company_sentences = [sent.text for sent in doc.sents if company.lower() in sent.text.lower()]
+    # Filter sentences containing the company name
+    relevant_sentences = [sent for sent in sentences if company.lower() in sent.lower()]
     
     # If no sentences mention the company, use the entire text
-    if not company_sentences:
-        company_text = text
-    else:
-        # Combine sentences into a single text block
-        company_text = ' '.join(company_sentences)
-        
-        # If the combined text is too short, expand to nearby sentences
-        if len(company_text.split()) < 50:
-            expanded_text = []
-            for sent in doc.sents:
-                if company.lower() in sent.text.lower():
-                    # Add the sentence and its neighbors
-                    idx = list(doc.sents).index(sent)
-                    for i in range(max(0, idx-1), min(idx+2, len(doc.sents))):
-                        expanded_text.append(doc.sents[i].text)
-            company_text = ' '.join(expanded_text)
+    if not relevant_sentences:
+        relevant_sentences = sentences
     
-    # Summarize the company-specific text
-    chunks = []
-    token_limit = 1024
-    for i in range(0, len(company_text), token_limit):
-        chunk = company_text[i: i+token_limit]
-        chunks.append(chunk)
+    # Use a simple extractive approach to select top sentences
+    stop_words = set(stopwords.words('english'))
+    sentence_scores = {}
+    for sent in relevant_sentences:
+        words = nltk.word_tokenize(sent.lower())
+        score = sum(1 for word in words if word not in stop_words)
+        sentence_scores[sent] = score
     
-    combined_summary = ''
-    for chunk in chunks:
-        summary = summarizer(chunk, max_length=200, min_length=30, do_sample=False)
-        combined_summary += summary[0]['summary_text']
+    # Sort sentences by score and select top ones
+    top_sentences = sorted(sentence_scores, key=sentence_scores.get, reverse=True)[:max_sentences]
     
-    if len(combined_summary.split()) > 1024:
-        return generate_summary(combined_summary, company, max_length)
-    else:
-        return combined_summary
+    return ' '.join(top_sentences)
 
 def comparative_analysis(articles):
     count=0
     now = datetime.now()
     print('Time at the start', now.minute, now.second)
     print('sleep for ', 60-now.second,' seconds')
-    time.sleep(60-now.second)
+    time.sleep(60-now.second+3)
     new_minute = datetime.now()
     print('ready at', new_minute.minute, new_minute.second)
     c_analysis=[]
@@ -126,7 +118,7 @@ def comparative_analysis(articles):
             print(f'15 requests served at -  {now.hour}:{now.minute}:{now.second}')
             
             print('wait for ', 60-now.second, 'seconds to refresh the api request limit')
-            time.sleep(60 - now.second)
+            time.sleep(60 - now.second + 3)
             
         prompt = f"""
                     Do a comparative analysis on these two articles:

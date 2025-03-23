@@ -1,6 +1,6 @@
 import requests
 import json
-from api import analyze_sentiment, topic_extractor, generate_summary, comparative_analysis
+from api import analyze_sentiment, topic_extractor, generate_summary, comparative_analysis, load_nltk
 from bs4 import BeautifulSoup
 from datetime import datetime
 
@@ -248,6 +248,8 @@ with open("articles.txt", "w") as file:
     for text in articles:
         file.write(text + "\n"+"*"*100 +'\n')
 
+
+load_nltk()
 for i in range(len(articles)):
     print('⭐', titles[i])
     summary = generate_summary(articles[i], search_query+' company')
