@@ -84,7 +84,6 @@ def analyze_sentiment(text, max_length=512):
     else:
         return "Neutral"
 
-
 def generate_summary(text, company,  max_sentences=3):
     # Tokenize sentences
     sentences = sent_tokenize(text)
@@ -128,48 +127,38 @@ def comparative_analysis(articles):
             time.sleep(60 - now.second + 3)
         
         prompt = f"""
-                    Do a comparative analysis on these two articles:
-                    Article {i+1}: {articles[i]}
-                    Article {j+1}: {articles[j]}
+        Do a comparative analysis on the following two articles:
 
-                    To make the comparisons more natural and varied:
-                    1.  Randomly choose which article to describe first. Sometimes start with Article {i+1}, sometimes with Article {j+1}.
-                    2.  But keep the same order for both comparison and impact. If Article{i+1} is discussed first in comparison then It should be discussed first in Impact as well.
-                    3.  Avoid using the exact same phrasing to describe Article {i+1} or Article {j+1} in every comparison.
-                    4.  Use diverse sentence structures and vocabulary to make each comparison unique.
+        Article {i+1}: {articles[i]}
 
-                    Here's an example of the a scenario and the desired output:
-                    Suppose Article{i+1} was about Tesla company's strong sales and performance and 
-                    Article {j+1} was about the regulatory challenges faced by the company.
+        Article {j+1}: {articles[j]}
 
-                    The output should look like this:
+        Provide a comparative analysis, focusing on both the comparison and the potential impact of these articles. Structure your response as a list containing two elements: the comparison and the impact, in that order.
 
-                    {
-                        "Comparison": "In contrast to Article {j+1}, which outlines regulatory challenges, Article {i+1} highlights Tesla's strong sales performance.",
-                        "Impact": "While the regulatory issues raised in Article {j+1} may cause concern, Article {i+1}'s sales data suggests continued market growth."
-                    }
+        Ensure your analysis adheres to these guidelines:
 
-                    Remember, only provide the JSON output. Avoid any additional text.
-                    """
+        1.  Vary the starting article in your comparison. Sometimes begin with Article {i+1}, sometimes with Article {j+1}.
+        2.  Maintain the same article order for both the comparison and impact sections.
+        3.  Avoid repetitive phrasing; use diverse vocabulary and sentence structures for each comparison.
 
+        Output format:
+
+        ["Comparison of the articles...", "Impact of the articles..."]
+"""
         
         response = client.models.generate_content(
             model='gemini-1.5-flash', contents=prompt, 
         )
         count += 1
-        
-        # Clean up the response
-        text = response.text.replace("``````", "").replace("\n", "").replace("\\", "").strip()
-        
         try:
-            # Load as JSON
-            comparison = json.loads("{" + text + "}")
-            c_analysis.append(comparison)
-        except json.JSONDecodeError:
-            print(f"Failed to parse response: {text}")
-            c_analysis.append({"Comparison": "Failed to parse", "Impact": "Failed to parse"})
-
-
+            response_list = json.loads(response.text)
+            # Clean up the response
+            print(response_list)
+            c_analysis.append(response_list)
+        except Exception as e:
+            print('error' , e ,)
+            c_analysis.append(response.text)
+    return c_analysis
 
 def find_common_and_unique_topics_flexible(topics_list, similarity_threshold=0.7):
     model = SentenceTransformer('all-MiniLM-L6-v2')
@@ -224,6 +213,11 @@ def find_common_and_unique_topics_flexible(topics_list, similarity_threshold=0.7
                     unique_list.remove(topic)
 
     return common_topics, unique_topics_lists
+
+
+
+
+# Call this function after translating the text
 
 hc_summaries = [
 

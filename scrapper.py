@@ -1,6 +1,6 @@
 import requests
 import json
-from api import analyze_sentiment, topic_extractor, generate_summary, comparative_analysis, load_nltk
+from api import analyze_sentiment, topic_extractor, generate_summary, comparative_analysis, load_nltk, find_common_and_unique_topics_flexible
 from bs4 import BeautifulSoup
 from datetime import datetime
 
@@ -106,7 +106,7 @@ def ap_news_scraping(url, n_articles):
         if search_list:
             item_divs = search_list.find_all('div', class_='PageList-items-item')
             while iter < limit:
-                if len(articles) > n_articles:
+                if len(articles) >= n_articles:
                     iter = limit+1
                 else:
                     item = item_divs[iter]
@@ -146,7 +146,6 @@ def ap_news_scraping(url, n_articles):
                                     article__ += para.get_text() + '\n'
                                 articles.append(article__)
                                 print('✅successfully scraped')
-                                n_articles-=1
                                 print('')
                             else:
                                 print('❌story paragraphs not found')
@@ -215,7 +214,7 @@ def news_scraping(url):
     except Exception as e:
         print(f" Error scraping {url}: {e}")
 
-search_query = 'Deloitte'
+search_query = 'Tesla'
 # search_query = input('Search -- ')
 
 # print('--------------------------------BBC--------------------------------------')
@@ -228,22 +227,6 @@ ap_url="https://apnews.com/search?q="+search_query+"+company&s=0"
 print(ap_url,'\n')
 ap_news_scraping(ap_url, n_articles)
 
-
-
-
-# print('--------------------------------NEWS--------------------------------------')
-# today = datetime.now()
-# if today.month == 1:
-#     prev = today.replace(year=today.year-1, month=12)
-# else:
-#     prev = today.replace(month=today.month-1)
-
-# today = today.strftime('%Y-%m-%d')
-# prev_month = prev.strftime('%Y-%m-%d')
-
-# url ="https://www.nytimes.com/search?dropmab=false&endDate="+today+"&lang=en&query=tesla&sort=best&startDate="+prev_month
-# print(url)
-# news_scraping(url)
 
 
 
@@ -266,6 +249,10 @@ for i in range(len(articles)):
     print('')
 
 comparatie_analysis_result = comparative_analysis(summaries)
+common_topics, unique_topic_lists=find_common_and_unique_topics_flexible(topics)
+sentiment_counter = {}
+for sentiment in sentiments:
+    sentiment_counter[sentiment] = sentiment_counter.get(sentiment, 0) + 1
 
 result["Company"] = search_query
 result["Articles"] = [{
@@ -277,18 +264,43 @@ result["Articles"] = [{
                         }
                       for i in range(len(articles))]
 
-sentiment_counter = {}
-for sentiment in sentiments:
-    sentiment_counter[sentiment] = sentiment_counter.get(sentiment, 0) + 1
 
-result["Comparative Sentiment Score"] = {
-    "Sentiment Distribution" : sentiment_counter,
-    "Coverage Differences" : comparatie_analysis_result,
+
+
+result["Comparative Sentiment Score"]={ 
+    "Sentiment Distribution":{},
+    "Coverage Differences": [], 
+    "Topic Overlap": {
+        "Common Topics": [],
+    }
 }
 
-result["Topic Overlap"] = {
-    "Common Topics": [],
-}
+result["Comparative Sentiment Score"]["Sentiment Distribution"]=sentiment_counter
+
+for i in comparatie_analysis_result:
+    comparative_analysis = {
+        "Comparison" : i[0],
+        "Impact" : i[1]
+    }
+    result["Comparative Sentiment Score"]["Coverage Differences"].append(comparative_analysis)
+
+
+result["Comparative Sentiment Score"]["Topic Overlap"]["Common Topics"]= []
+
+for topic_groups in common_topics:
+    similar_topics = ''
+    for topic in topic_groups:
+        similar_topics+=str(topic)+'/'
+    result["Comparative Sentiment Score"]["Topic Overlap"]["Common Topics"].append(str(''.join(list(similar_topics)[:-1])))
+
+
+for i in range(len(articles)):
+    result["Comparative Sentiment Score"]["Topic Overlap"][f"Unique Topics in Article {i+1}"]=unique_topic_lists[i]
+
+
+result["Final Sentiment Analysis"] = ''
+result["Audio"] = ''
+# generate_audio_with_parler_tts(hindi_text)
 
 with open('result.json', 'w') as file:
     json.dump(result, file, indent=4)

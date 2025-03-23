@@ -12,6 +12,7 @@ source venv/bin/activate
 echo "Installing packages..."
 pip install -r requirements.txt
 
+
 echo "Running Python script..."
 python3 scrapper.py
 
