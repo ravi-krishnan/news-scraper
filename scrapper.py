@@ -211,8 +211,7 @@ def news_scraping(url):
         print(f" Error scraping {url}: {e}")
 
 
-# search_query = input('Search -- ')
-search_query = 'tesla'
+search_query = input('Search -- ')
 
 print('--------------------------------BBC--------------------------------------')
 bbc_url ="https://www.bbc.com/search?q="+search_query+"+company"
@@ -271,10 +270,22 @@ result["Articles"] = [{
                         }
                       for i in range(len(articles))]
 
-result["Coverage Differences"] = comparatie_analysis_result
+sentiment_counter = {}
+for sentiment in sentiments:
+    sentiment_counter[sentiment] = sentiment_counter.get(sentiment, 0) + 1
+
+print(sentiment_counter)
+result["Comparative Sentiment Score"] = {
+    "Sentiment Distribution" : sentiment_counter,
+    "Coverage Differences" : comparatie_analysis_result,
+    # "Topic Overlap" : {
+    #     "Common Topics" : ,
+
+    # }
+}
 
 with open('result.json', 'w') as file:
     json.dump(result, file, indent=4)
 
 print("JSON file created successfully!")
-print(result)
+# print(result)
