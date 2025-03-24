@@ -1,3 +1,5 @@
+flask
+streamlit
 requests
 bs4
 transformers

@@ -1,36 +1,105 @@
-from transformers import pipeline
-from dotenv import load_dotenv
-from google import genai
-import os
-from itertools import combinations
-import time
+import requests
+from bs4 import BeautifulSoup
 from datetime import datetime
-import re
-import json
 import nltk
 from nltk.corpus import stopwords
 from nltk.tokenize import sent_tokenize
-from nltk.corpus import wordnet
 from sentence_transformers import SentenceTransformer, util
-import numpy as np
-from transformers import MarianMTModel, MarianTokenizer
+from transformers import pipeline, MarianMTModel, MarianTokenizer
+from google import genai
 from gtts import gTTS
-
+from dotenv import load_dotenv
+import os
+import time
+import re
+import json
+from itertools import combinations
 
 load_dotenv()
 client = genai.Client(api_key=os.getenv('GEMINI_API_KEY'))
 summarizer = pipeline("summarization", model="facebook/bart-large-cnn")
-sentiment_analyzer = pipeline(
-    "sentiment-analysis",
-    model="distilbert-base-uncased-finetuned-sst-2-english"
-)
+sentiment_analyzer = pipeline("sentiment-analysis", model="distilbert-base-uncased-finetuned-sst-2-english")
 
+headers = {
+    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
+}
 
 def load_nltk():
     nltk.download('punkt')
     nltk.download('punkt_tab')
     nltk.download('stopwords')
     nltk.download('wordnet')
+
+def ap_news_scraping(url, n_articles):
+    iter_count = 0
+    limit = 30
+    articles = []
+    titles = []
+    try:
+        response = requests.get(url, headers=headers)
+        soup = BeautifulSoup(response.text, 'html.parser')
+        
+        search_list = soup.find('div', class_='PageList-items')
+        
+        if search_list:
+            item_divs = search_list.find_all('div', class_='PageList-items-item')
+            while iter_count < limit:
+                if len(articles) >= n_articles:
+                    return articles, titles
+                
+                item = item_divs[iter_count]
+                search_item = item.find('div', class_='PagePromo-content')
+
+                date_header = item.find('div', class_='PagePromo-date')
+                bsp_timestamp = date_header.find('bsp-timestamp')
+                timestamp_ms = bsp_timestamp['data-timestamp']
+
+                timestamp_s = int(timestamp_ms) / 1000
+                dt_object = datetime.fromtimestamp(timestamp_s)
+                human_readable_date = dt_object.strftime("%Y-%m-%d")
+                print(human_readable_date)
+
+                link = search_item.find('a', class_='Link')
+                title = link.find('span')
+
+                print(title.get_text())
+                print(link['href'])
+
+                article_response = requests.get(link['href'], headers=headers)
+                article_page = BeautifulSoup(article_response.text, 'html.parser')
+                
+                story = article_page.find('bsp-story-page')
+                if story:
+                    story_body = story.find('div', class_='RichTextStoryBody')
+                    if story_body:
+                        story_para = story_body.find_all('p')
+                        if story_para:
+                            article_text = human_readable_date + '\n'
+                            article_text += '\n'.join(para.get_text() for para in story_para)
+                            articles.append(article_text)
+                            titles.append(title.get_text())
+                            print('✅ Successfully scraped')
+                            print('')
+                        else:
+                            print('❌ Story paragraphs not found')
+                            print('')
+                    else:
+                        print("❌ Story not found in Story tag")
+                        print('')
+                else:
+                    print("❌ Story tag not found")
+                    print('')
+                    limit += 1
+                
+                iter_count += 1 
+
+        else:
+            print(f"❌ Content not found in HTML: {url}")
+            print('')
+            
+    except Exception as e:
+        print(f"❌ Error scraping {url}: {e}")
+        print('')
 
 def topic_extractor(text):
     prompt = '''
@@ -240,13 +309,3 @@ def final_sentiment_analysis_report(sentiments, comparative_analysis):
         model='gemini-1.5-flash', contents=prompt, 
     )
     return response.text
-
-hc_summaries = [
-
-    'Presidential tweets his support for Tesla CEO Elon Musk. Trump calls Musk a ‘great guy’ and says he is ‘proud’ of him.',
-    'Tesla sales plunged 45% in Europe in January, according to research firm Jato Dynamics. That comes after a report of falling sales in California, its biggest U.S. market. “I don’t even want to drive it,” said Model 3 owner John Parnell.',
-    'A Chinese court ordered Zhang to pay more than $23,000 in damages and publicly apologize to the $1.1 trillion company. Over the last four years, Tesla has sued at least six car owners in China.Tesla won all 11 cases for which AP could determine the verdicts. Two judgments, including Zhang’s, are on appeal. One case was settled out of court.Tesla officials in China and the United States did not reply to requests for comment. Tesla has profited from the largesse of the Chinese state, winning unprecedented regulatory benefits, below-market rate loans and large tax breaks.Tesla won nearly 90% of civil cases over safety, quality or contract disputes, AP finds. Journalists told AP they have been instructed to avoid negative coverage of the automaker.',
-    "People protesting against Tesla should be labelled domestic terrorists, says President Donald Trump. Trump sat in the driver's seat of a brand new red Tesla that he said he planned to buy, with Elon Musk in the passenger seat.",
-    'The issue affects more than 46,000 trucks made starting in November 2023. It comes as Tesla grapples with falling sales amid a backlash against the firm.',
-    'US Attorney General Pam Bondi said the damage to Tesla cars, dealerships and charging stations was "domestic terrorism" There is no specific US law against domestic terrorism, but prosecutors can request longer prison sentences.'
-    ]

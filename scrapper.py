@@ -8,7 +8,7 @@ headers = {
         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
     }
 
-n_articles = 10
+N_ARTICLES = 10
 
 result = {}
 articles = []
@@ -91,46 +91,6 @@ def ap_news_scraping(url, n_articles):
 # BBC only has 10 articles to offer at maximum
 
 
-def news_scraping(url):
-    iter = 0
-    limit = 3
-    try:
-        response = requests.get(url, headers=headers)
-        soup = BeautifulSoup(response.text, 'html.parser')
-        search_results = soup.find('div', class_="css-8xl60i")
-        search_list = search_results.find('ol')
-        search_items = search_list.find_all('li', class_='css-1l4w6pd', limit=3)
-        if search_items:
-            for search_item in search_items:
-                if search_item:
-                    link = search_item.find('a')
-                    print('https://nytimes.com/'+link['href'])
-                    print(link.find('h4').get_text())
-
-                    response = requests.get('https://nytimes.com/'+link['href'], headers=headers)
-                    page = BeautifulSoup(response.text, 'html.parser')
-                    if page:
-                        stories  = page.find_all('p', class_='css-at9mc1 evys1bk0')
-                        print(stories)
-                        article__ = ''
-                        if stories:
-                            for story in stories:
-                                print(story.get_text())
-                                article__+=story.get_text()
-                                
-                            print(article__)
-
-                        else:
-                            print('!!story boards doesnt exist')
-                    else:
-                        print('!! Page doesnt exist')
-                    print('\n')
-                else:
-                    print('search item not found')
-        else:
-            print('!!! search list not found')
-    except Exception as e:
-        print(f" Error scraping {url}: {e}")
 
 search_query = 'Tesla'
 # search_query = input('Search -- ')
@@ -141,24 +101,17 @@ search_query = 'Tesla'
 # bbc_news_scraping(bbc_url, n_articles)
 
 print('--------------------------------AP NEWS--------------------------------------')
-ap_url="https://apnews.com/search?q="+search_query+"+company&s=0"
-print(ap_url,'\n')
-ap_news_scraping(ap_url, n_articles)
+ap_url = f"https://apnews.com/search?q={search_query}+company&s=0"
+print(ap_url, '\n')
+ap_news_scraping(ap_url, N_ARTICLES)
 
-
-
-
-print('No of articles:',len(articles))
-
-with open("articles.txt", "w") as file:
-    for text in articles:
-        file.write(text + "\n"+"*"*100 +'\n')
+print('No of articles:', len(articles))
 
 
 load_nltk()
-for i in range(len(articles)):
+for i, article in enumerate(articles):
     print('⭐', titles[i])
-    summary = generate_summary(articles[i], search_query+' company')
+    summary = generate_summary(article, f"{search_query} company")
     print('Summary created..')
     sentiment = analyze_sentiment(summary)
     print('Sentiment analyzed..')
@@ -173,72 +126,57 @@ sentiment_counter = {}
 for sentiment in sentiments:
     sentiment_counter[sentiment] = sentiment_counter.get(sentiment, 0) + 1
 
-comparatie_analysis_result = comparative_analysis(summaries)
+comparative_analysis_result = comparative_analysis(summaries)
 
-common_topics, unique_topic_lists=find_common_and_unique_topics_flexible(topics)
-
-
-
+common_topics, unique_topic_lists = find_common_and_unique_topics_flexible(topics)
 
 result["Company"] = search_query
-result["Articles"] = [{
-                        "Title": titles[i],
-                        "Summary": summaries[i],
-                        "Topics": topics[i],
-                        "Sentiment":sentiments[i],
-                        
-                        }
-                      for i in range(len(articles))]
+result["Articles"] = [
+    {
+        "Title": titles[i],
+        "Summary": summaries[i],
+        "Topics": topics[i],
+        "Sentiment": sentiments[i],
+    }
+    for i in range(len(articles))
+]
 
-
-
-
-result["Comparative Sentiment Score"]={ 
-    "Sentiment Distribution":{},
-    "Coverage Differences": [], 
+result["Comparative Sentiment Score"] = {
+    "Sentiment Distribution": {},
+    "Coverage Differences": [],
     "Topic Overlap": {
         "Common Topics": [],
     }
 }
 
-result["Comparative Sentiment Score"]["Sentiment Distribution"]=sentiment_counter
+result["Comparative Sentiment Score"]["Sentiment Distribution"] = sentiment_counter
 
-for i in comparatie_analysis_result:
+for comparison, impact in comparative_analysis_result:
     comparative_analysis = {
-        "Comparison" : i[0],
-        "Impact" : i[1]
+        "Comparison": comparison,
+        "Impact": impact
     }
     result["Comparative Sentiment Score"]["Coverage Differences"].append(comparative_analysis)
 
-
-result["Comparative Sentiment Score"]["Topic Overlap"]["Common Topics"]= []
+result["Comparative Sentiment Score"]["Topic Overlap"]["Common Topics"] = []
 
 for topic_groups in common_topics:
-    similar_topics = ''
-    for topic in topic_groups:
-        similar_topics+=str(topic)+'/'
-    result["Comparative Sentiment Score"]["Topic Overlap"]["Common Topics"].append(str(''.join(list(similar_topics)[:-1])))
+    similar_topics = '/'.join(str(topic) for topic in topic_groups)
+    result["Comparative Sentiment Score"]["Topic Overlap"]["Common Topics"].append(similar_topics)
 
+for i, unique_topics in enumerate(unique_topic_lists):
+    result["Comparative Sentiment Score"]["Topic Overlap"][f"Unique Topics in Article {i+1}"] = unique_topics
 
-for i in range(len(articles)):
-    result["Comparative Sentiment Score"]["Topic Overlap"][f"Unique Topics in Article {i+1}"]=unique_topic_lists[i]
-
-
-
-
-
-final_sentiment_analysis =  final_sentiment_analysis_report(sentiment_counter, result["Comparative Sentiment Score"]["Coverage Differences"])
+final_sentiment_analysis = final_sentiment_analysis_report(sentiment_counter, result["Comparative Sentiment Score"]["Coverage Differences"])
 hindi_audio = text_to_hi_audio(final_sentiment_analysis)
 
 result["Final Sentiment Analysis"] = final_sentiment_analysis
 result["Audio"] = '/news-scraper/output.mp3'
-# generate_audio_with_parler_tts(hindi_text)
 
 with open('result.json', 'w') as file:
     json.dump(result, file, indent=4)
 
 print("JSON file created successfully!")
-# print(result)
 
 
 
@@ -274,76 +212,114 @@ print("JSON file created successfully!")
 
 
 
-
-
-def bbc_news_scraping(url):
-    iter = 0
-    limit = 10
-    try:
-        response = requests.get(url, headers=headers)
-        soup = BeautifulSoup(response.text, 'html.parser')
-        search_list = soup.find_all('div', class_="sc-c6f6255e-0 eGcloy")
-        # print(search_list)
-        if search_list:
+# def bbc_news_scraping(url):
+#     iter = 0
+#     limit = 10
+#     try:
+#         response = requests.get(url, headers=headers)
+#         soup = BeautifulSoup(response.text, 'html.parser')
+#         search_list = soup.find_all('div', class_="sc-c6f6255e-0 eGcloy")
+#         # print(search_list)
+#         if search_list:
             
-            while iter < limit:
-                if len(articles) == n_articles:
-                    iter = limit+1
+#             while iter < limit:
+#                 if len(articles) == n_articles:
+#                     iter = limit+1
 
-                else:
+#                 else:
 
-                    item = search_list[iter]
-                    search_item = item.find('a', class_="sc-2e6baa30-0 gILusN")
+#                     item = search_list[iter]
+#                     search_item = item.find('a', class_="sc-2e6baa30-0 gILusN")
                     
-                    if search_item:
-                        title = item.find('h2', class_ ="sc-87075214-3 cXFiLO")
-                        if search_item['href'].startswith('https'):
-                            link = search_item['href']
+#                     if search_item:
+#                         title = item.find('h2', class_ ="sc-87075214-3 cXFiLO")
+#                         if search_item['href'].startswith('https'):
+#                             link = search_item['href']
                         
-                        else:
-                            link = 'https://www.bbc.com'+search_item['href']
+#                         else:
+#                             link = 'https://www.bbc.com'+search_item['href']
                         
-                        print(title.get_text())
-                        print(link)
-                        response = requests.get(link, headers=headers)
-                        page = BeautifulSoup(response.text, 'html.parser')
-                        if page:
-                            article = page.find('article')
-                            if article:
-                                text_blocks = article.find_all('div', class_='sc-18fde0d6-0 dlWCEZ')
-                                article__ = ''
-                                titles.append(title.get_text())
-                                if text_blocks:
-                                    for text in text_blocks:
-                                        article__+=text.get_text()
+#                         print(title.get_text())
+#                         print(link)
+#                         response = requests.get(link, headers=headers)
+#                         page = BeautifulSoup(response.text, 'html.parser')
+#                         if page:
+#                             article = page.find('article')
+#                             if article:
+#                                 text_blocks = article.find_all('div', class_='sc-18fde0d6-0 dlWCEZ')
+#                                 article__ = ''
+#                                 titles.append(title.get_text())
+#                                 if text_blocks:
+#                                     for text in text_blocks:
+#                                         article__+=text.get_text()
 
-                                    articles.append(article__)
+#                                     articles.append(article__)
 
-                                    print('✅ successfully scraped')
-                                    print('')
-                                else:
-                                    print('❌ text blocks not found')
-                                    print('')
-                                    limit+=1
-                            else:
-                                print('❌ article not found')
-                                print('')
-                                limit+=1
-                        else:
-                            print('❌ page doesnt exit')
-                            print('')
-                            limit+=1
+#                                     print('✅ successfully scraped')
+#                                     print('')
+#                                 else:
+#                                     print('❌ text blocks not found')
+#                                     print('')
+#                                     limit+=1
+#                             else:
+#                                 print('❌ article not found')
+#                                 print('')
+#                                 limit+=1
+#                         else:
+#                             print('❌ page doesnt exit')
+#                             print('')
+#                             limit+=1
                         
-                    else:
-                        print('❌ !!!!!!No RESULTS!!!!!!!!!!')
-                        print('')
+#                     else:
+#                         print('❌ !!!!!!No RESULTS!!!!!!!!!!')
+#                         print('')
                     
-                    iter+=1
+#                     iter+=1
                     
 
-        else:
-            print('❌ Search not found')
-            print('')
-    except Exception as e:
-        print(f"❌ Error scraping {url}: {e}")
-        print('')
+#         else:
+#             print('❌ Search not found')
+#             print('')
+#     except Exception as e:
+#         print(f"❌ Error scraping {url}: {e}")
+#         print('')
+# def news_scraping(url):
+#     iter = 0
+#     limit = 3
+#     try:
+#         response = requests.get(url, headers=headers)
+#         soup = BeautifulSoup(response.text, 'html.parser')
+#         search_results = soup.find('div', class_="css-8xl60i")
+#         search_list = search_results.find('ol')
+#         search_items = search_list.find_all('li', class_='css-1l4w6pd', limit=3)
+#         if search_items:
+#             for search_item in search_items:
+#                 if search_item:
+#                     link = search_item.find('a')
+#                     print('https://nytimes.com/'+link['href'])
+#                     print(link.find('h4').get_text())
+
+#                     response = requests.get('https://nytimes.com/'+link['href'], headers=headers)
+#                     page = BeautifulSoup(response.text, 'html.parser')
+#                     if page:
+#                         stories  = page.find_all('p', class_='css-at9mc1 evys1bk0')
+#                         print(stories)
+#                         article__ = ''
+#                         if stories:
+#                             for story in stories:
+#                                 print(story.get_text())
+#                                 article__+=story.get_text()
+                                
+#                             print(article__)
+
+#                         else:
+#                             print('!!story boards doesnt exist')
+#                     else:
+#                         print('!! Page doesnt exist')
+#                     print('\n')
+#                 else:
+#                     print('search item not found')
+#         else:
+#             print('!!! search list not found')
+#     except Exception as e:
+#         print(f" Error scraping {url}: {e}")
