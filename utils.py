@@ -14,6 +14,8 @@ import time
 import re
 import json
 from itertools import combinations
+import base64
+import io
 
 load_dotenv()
 client = genai.Client(api_key=os.getenv('GEMINI_API_KEY'))
@@ -164,18 +166,18 @@ def generate_summary(text, company, max_sentences=3):
 def comparative_analysis(articles):
     count = 0
     now = datetime.now()
-    print('Time at the start', now.minute, now.second)
-    print('sleep for ', 60 - now.second, ' seconds')
+    print(f'Time - {datetime.now().strftime("%H:%M:%S")}')
+    print('We need to wait for ', 60 - now.second, ' seconds to refresh the APi request limit.')
     time.sleep(60 - now.second + 3)
     new_minute = datetime.now()
-    print('ready at', new_minute.minute, new_minute.second)
+    print('Ready!! at ', {datetime.now().strftime("%H:%M:%S")})
     c_analysis = []
     
     for i, j in combinations(range(len(articles)), 2):
         if count % 15 == 0 and count != 0:
             now = datetime.now()
-            print(f'15 requests served at -  {now.hour}:{now.minute}:{now.second}')
-            print('wait for ', 60 - now.second, 'seconds to refresh the api request limit')
+            print(f'15 requests served at -  {datetime.now().strftime("%H:%M:%S")}')
+            print('We need to wait for ', 60 - now.second, 'seconds to refresh the API request limit.')
             time.sleep(60 - now.second + 3)
         
         prompt = f"""
@@ -206,6 +208,7 @@ def comparative_analysis(articles):
         )
         count += 1
         text = response.text.replace("```", "")
+        
         try:
             response_list = json.loads(text)
             c_analysis.append(response_list)
@@ -264,13 +267,20 @@ def text_to_hi_audio(text):
 
     tts = gTTS(text=hindi_text, lang='hi')
     tts.save("output.mp3")
-    return 'Audio saved as output.mp3'
+    print('Audio saved as output.mp3')
+    audio_buffer = io.BytesIO()
+    tts.write_to_fp(audio_buffer)
+    audio_buffer.seek(0)
+
+    # Encode audio to Base64
+    audio_base64 = base64.b64encode(audio_buffer.read()).decode("utf-8")
+    return audio_base64
 
 def final_sentiment_analysis_report(sentiments, comparative_analysis):
     now = datetime.now()
-    print('Final sentimental analysis')
-    print('Time now:', now.minute, now.second)
-    print('sleep for', 60 - now.second, 'seconds')
+    print('* Overall sentimental report *')
+    print(f'Time - {datetime.now().strftime("%H:%M:%S")}')
+    print('We need to wait for ', 60 - now.second, 'seconds to refresh the API request limit')
     time.sleep(60 - now.second + 3)
     prompt = f"""
     Analyze the provided "Sentiment Distribution" and "Coverage Differences" data to generate a concise "Final Sentiment Analysis" string. 

@@ -9,7 +9,7 @@ with st.form("search_form"):
     submit_button = st.form_submit_button("Search")
 
     if submit_button:
-        url = "http://127.0.0.1:5000/search"
+        url = "http://127.0.0.1:8000/search"
         payload = {"search_query": search_query}
         
         try:

@@ -14,6 +14,7 @@ pip install -r requirements.txt
 
 
 echo "Running Python script..."
-python3 main.py
+waitress-serve --listen=*:8000 main:app
+
 
 

@@ -1,6 +1,7 @@
 from flask import Flask, request, jsonify
 from apiv2 import process_search_query
 from utils import load_nltk
+import json
 
 app = Flask(__name__)
 
@@ -13,6 +14,9 @@ def search():
 
     load_nltk()
     result = process_search_query(search_query)
+    
+    with open('result.json', 'w') as file:
+        json.dump(result, file, indent=4)
     return jsonify(result)
 
 if __name__ == '__main__':

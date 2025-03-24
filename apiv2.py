@@ -2,6 +2,7 @@ from utils import (ap_news_scraping, generate_summary, analyze_sentiment, topic_
                    comparative_analysis, find_common_and_unique_topics_flexible,
                    final_sentiment_analysis_report, text_to_hi_audio)
 
+
 def process_search_query(search_query):
     N_ARTICLES = 10
     ap_url = f"https://apnews.com/search?q={search_query}+company&s=0"
@@ -43,10 +44,10 @@ def process_search_query(search_query):
             "Sentiment Distribution": sentiment_counter,
             "Coverage Differences": [
                 {
-                    "Comparison": comparison,
-                    "Impact": impact
+                    "Comparison": combined[0],
+                    "Impact": combined[1]
                 }
-                for comparison, impact in comparative_analysis_result
+                for combined in comparative_analysis_result
             ],
             "Topic Overlap": {
                 "Common Topics": ['/'.join(str(topic) for topic in topic_groups) for topic_groups in common_topics],
@@ -61,6 +62,5 @@ def process_search_query(search_query):
     hindi_audio = text_to_hi_audio(final_sentiment_analysis)
 
     result["Final Sentiment Analysis"] = final_sentiment_analysis
-    result["Audio"] = '/news-scraper/output.mp3'
-
+    result["Audio"] = hindi_audio
     return result
