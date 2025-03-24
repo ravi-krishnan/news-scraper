@@ -17,6 +17,8 @@ def search():
     
     with open('result.json', 'w') as file:
         json.dump(result, file, indent=4)
+    
+    print('success')
     return jsonify(result)
 
 if __name__ == '__main__':

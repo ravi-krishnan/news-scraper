@@ -42,8 +42,8 @@ with st.form("search_form"):
 
             st.subheader("Comparative Sentimental coverage")
             for i in result["Comparative Sentiment Score"]["Coverage Differences"]:
-                st.write(f"**Comparison:**     {i[0]}")
-                st.write(f"**Impact:**         {i[1]}")
+                st.write(f"**Comparison:**     {i["Comparison"]}")
+                st.write(f"**Impact:**         {i["Impact"]}")
             st.markdown("---")
             # Display topic overlap
             st.subheader("Topic Overlap")
