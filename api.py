@@ -14,16 +14,18 @@ from nltk.corpus import wordnet
 from transformers import pipeline
 from sentence_transformers import SentenceTransformer, util
 import numpy as np
+from transformers import MarianMTModel, MarianTokenizer
+from gtts import gTTS
 
 
 # Download necessary NLTK resources
 
 load_dotenv()
 client = genai.Client(api_key=os.getenv('GEMINI_API_KEY'))
-
-
-sentiment_analyzer = pipeline("sentiment-analysis", model="distilbert-base-uncased-finetuned-sst-2-english")
 summarizer = pipeline("summarization", model="facebook/bart-large-cnn")
+sentiment_analyzer = pipeline("sentiment-analysis", model="distilbert-base-uncased-finetuned-sst-2-english")
+
+
 
 def load_nltk():
     nltk.download('punkt')
@@ -62,8 +64,8 @@ def topic_extractor(text):
         print(f"Failed to parse response: {cleaned_response}")
         return []
 
-
 def analyze_sentiment(text, max_length=512):
+
     # Split text into chunks 
     words = text.split()
     chunks=[]
@@ -86,6 +88,7 @@ def analyze_sentiment(text, max_length=512):
 
 def generate_summary(text, company,  max_sentences=3):
     # Tokenize sentences
+
     sentences = sent_tokenize(text)
     
     # Filter sentences containing the company name
@@ -127,37 +130,43 @@ def comparative_analysis(articles):
             time.sleep(60 - now.second + 3)
         
         prompt = f"""
-        Do a comparative analysis on the following two articles:
+                Do a comparative analysis on the following two articles:
 
-        Article {i+1}: {articles[i]}
+                Article {i+1}: {articles[i]}
 
-        Article {j+1}: {articles[j]}
+                Article {j+1}: {articles[j]}
 
-        Provide a comparative analysis, focusing on both the comparison and the potential impact of these articles. Structure your response as a list containing two elements: the comparison and the impact, in that order.
+                Provide a comparative analysis, focusing on both the comparison and the potential impact of these articles. Structure your response as a list containing two elements: the comparison and the impact, in that order.
+                Ensure your analysis adheres to these guidelines:
 
-        Ensure your analysis adheres to these guidelines:
+                1.  Vary the starting article in your comparison. Sometimes begin with Article {i+1}, sometimes with Article {j+1}.
+                2.  Maintain the same article order for both the comparison and impact sections.
+                3.  Avoid repetitive phrasing; use diverse vocabulary and sentence structures for each comparison.
+                4.  **DO NOT output the response in JSON format. Return the output as a list of strings.**
+                5.  **The response MUST be a list of strings. Do not output in JSON or any other format.**
+    ...
 
-        1.  Vary the starting article in your comparison. Sometimes begin with Article {i+1}, sometimes with Article {j+1}.
-        2.  Maintain the same article order for both the comparison and impact sections.
-        3.  Avoid repetitive phrasing; use diverse vocabulary and sentence structures for each comparison.
+                Example Output:
+                ["Article {i+1} emphasizes X, while Article {j+1} focuses on Y...", "The combined impact could lead to Z..."]
 
-        Output format:
-
-        ["Comparison of the articles...", "Impact of the articles..."]
-"""
+                Output format:
+                ["Comparison of the articles...", "Impact of the articles..."]
+        """
         
         response = client.models.generate_content(
             model='gemini-1.5-flash', contents=prompt, 
         )
         count += 1
+        text = response.text.replace("```","")
+        # print(count)
+        # print(text, '\n =============================== \n')
         try:
-            response_list = json.loads(response.text)
-            # Clean up the response
-            print(response_list)
+            response_list = json.loads(text)
+
             c_analysis.append(response_list)
         except Exception as e:
             print('error' , e ,)
-            c_analysis.append(response.text)
+            c_analysis.append(text)
     return c_analysis
 
 def find_common_and_unique_topics_flexible(topics_list, similarity_threshold=0.7):
@@ -214,10 +223,64 @@ def find_common_and_unique_topics_flexible(topics_list, similarity_threshold=0.7
 
     return common_topics, unique_topics_lists
 
+def text_to_hi_audio(text):
+    model_name = "Helsinki-NLP/opus-mt-en-hi"
+    tokenizer = MarianTokenizer.from_pretrained(model_name)
+    model = MarianMTModel.from_pretrained(model_name)
 
+    # English to Hindi translation
+    translated = model.generate(**tokenizer(text, return_tensors="pt", padding=True))
+    hindi_text = tokenizer.decode(translated[0], skip_special_tokens=True)
 
+    # TTS
+    tts = gTTS(text=hindi_text, lang='hi')
+    tts.save("output.mp3")
+    return 'Audio saved as output.mp3'
 
-# Call this function after translating the text
+def final_sentiment_analysis_report(sentiments, comparative_analysis):
+    now = datetime.now()
+    print('Time at the start', now.minute, now.second)
+    print('sleep for ', 60-now.second,' seconds')
+    time.sleep(60-now.second+3)
+    prompt = f"""
+
+                Analyze the provided "Sentiment Distribution" and "Coverage Differences" data to generate a concise "Final Sentiment Analysis" string. 
+
+                The output must be a single string summarizing the overall market sentiment and potential stock impact based on the input data. Do not include any additional explanatory text or helper messages.
+
+                Example input:
+                "Sentiment Distribution": {{
+                    "Positive": 1,
+                    "Negative": 1,
+                    "Neutral": 0
+                    }},
+                    "Coverage Differences": [
+                    {{
+                    "Comparison": "Article 1 highlights Tesla's strong sales, while Article 2 discusses regulatory issues.",
+                    "Impact": "The first article boosts confidence in Tesla's market growth, while the second raises concerns about future regulatory hurdles."
+                    }},
+                    {{
+                    "Comparison": "Article 1 is focused on financial success and innovation, whereas Article 2 is about legal challenges and risks.",
+                    "Impact": "Investors may react positively to growth news but stay cautious due to regulatory scrutiny."
+                    }}
+                    ]
+
+                Example expected output:
+                "Tesla’s latest news coverage is mostly positive. Potential stock growth expected."
+
+                Input:
+                {{
+                    "Sentiment Distribution": {sentiments}
+                    "Coverage Differences": {comparative_analysis}
+                }}
+
+                Output:
+            """
+    response = client.models.generate_content(
+            model='gemini-1.5-flash', contents=prompt, 
+        )
+    return response.text
+
 
 hc_summaries = [
 
