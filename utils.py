@@ -193,8 +193,9 @@ def comparative_analysis(articles):
                 1.  Vary the starting article in your comparison. Sometimes begin with Article {i+1}, sometimes with Article {j+1}.
                 2.  Maintain the same article order for both the comparison and impact sections.
                 3.  Avoid repetitive phrasing; use diverse vocabulary and sentence structures for each comparison.
-                4.  **DO NOT output the response in JSON format. Return the output as a list of strings.**
-                5.  **The response MUST be a list of strings. Do not output in JSON or any other format.**
+                4.  The word limit for both comparison and impact is 40 words. DO NOT EXCEED IT.
+                5.  **DO NOT output the response in JSON format. Return the output as a list of strings.**
+                6.  **The response MUST be a list of strings. Do not output in JSON or any other format.**
 
                 Example Output:
                 ["Article {i+1} emphasizes X, while Article {j+1} focuses on Y...", "The combined impact could lead to Z..."]
