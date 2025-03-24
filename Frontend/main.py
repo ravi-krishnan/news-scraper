@@ -47,24 +47,26 @@ with st.form("search_form"):
             st.markdown("---")
             # Display topic overlap
             st.subheader("Topic Overlap")
-            for i in range(len(result["Topic Overlap"])):
+            for i in range(len(result["Comparative Sentiment Score"]["Topic Overlap"])):
                 if i==0:
-                    st.write(f"**Common Topics:** {', '.join(result['Topic Overlap']['Common Topics'])}")
+                    st.write(f"**Common Topics:** {', '.join(result['Comparative Sentiment Score']['Topic Overlap']['Common Topics'])}")
                 else:
-                    st.write(f"**Unique Topics in Article {i}:** ", result["Topic Overlap"][i])
+                    st.write(f"**Unique Topics in Article {i}:** ", result['Comparative Sentiment Score']['Topic Overlap'][f'Unique Topics in Article {i}'])
             st.markdown("---")
-            st.write
 
             # Display final sentiment
             st.subheader("Final Sentiment")
             st.write(result['Final Sentiment Analysis'])
+            st.markdown("---")
 
-            st.subheader("Hindi Audio ")
-            if st.button("Press here to play audio"):
-                # decode
-                audio_bytes = base64.b64decode(result["Audio"])
-                
-                # Use st.audio to play the audio
-                st.audio(audio_bytes, format='audio/mp3')
+            st.subheader("Hindi Audio")
+            submitted = st.form_submit_button("Press here to play audio")
+            st.markdown("---")
+            if submitted:
+                # Decode the base64 audio
+                audio_bytes = base64.b64decode(result['Audio'])
+
+                # Play the audio
+                st.audio(audio_bytes, format="audio/mp3")
         except requests.exceptions.RequestException as e:
             st.error(f"An error occurred: {e}")

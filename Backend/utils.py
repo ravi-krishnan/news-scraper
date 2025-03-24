@@ -166,17 +166,17 @@ def generate_summary(text, company, max_sentences=3):
 def comparative_analysis(articles):
     count = 0
     now = datetime.now()
+    print('* Comparative Coverage Analysis *')
     print(f'Time - {datetime.now().strftime("%H:%M:%S")}')
-    print('We need to wait for ', 60 - now.second, ' seconds to refresh the APi request limit.')
-    time.sleep(60 - now.second + 3)
-    new_minute = datetime.now()
+    print(f'We need to wait for {60+60-now.second} seconds to refresh the APi request limit.FAIL SAFE')
+    time.sleep(60 + 60 - now.second)
     print('Ready!! at ', {datetime.now().strftime("%H:%M:%S")})
     c_analysis = []
     
     for i, j in combinations(range(len(articles)), 2):
         if count % 14 == 0 and count != 0:
             now = datetime.now()
-            print(f'15 requests served at -  {datetime.now().strftime("%H:%M:%S")}')
+            print(f'14 requests served at -  {datetime.now().strftime("%H:%M:%S")}')
             print('We need to wait for ', 60 - now.second, 'seconds to refresh the API request limit.')
             time.sleep(60 - now.second + 3)
         
@@ -278,11 +278,11 @@ def text_to_hi_audio(text):
     return audio_base64
 
 def final_sentiment_analysis_report(sentiments, comparative_analysis):
-    now = datetime.now()
-    print('* Overall sentimental report *')
-    print(f'Time - {datetime.now().strftime("%H:%M:%S")}')
-    print('We need to wait for ', 60 - now.second, 'seconds to refresh the API request limit')
-    time.sleep(60 - now.second + 3)
+    # now = datetime.now()
+    # print('* Overall sentimental report *')
+    # print(f'Time - {datetime.now().strftime("%H:%M:%S")}')
+    # print('We need to wait for ', 60 - now.second, 'seconds to refresh the API request limit')
+    # time.sleep(60 - now.second + 3)
     prompt = f"""
     Analyze the provided "Sentiment Distribution" and "Coverage Differences" data to generate a concise "Final Sentiment Analysis" string. 
 

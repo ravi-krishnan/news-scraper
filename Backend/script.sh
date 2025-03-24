@@ -1,5 +1,4 @@
 #!/bin/bash
-
 # Create a virtual environment if it doesn't exist
 if [ ! -d "venv" ]; then
     echo "Creating virtual environment..."
@@ -15,6 +14,3 @@ pip install -r requirements.txt
 
 echo "Running Python script..."
 waitress-serve --listen=*:8000 main:app
-
-
-
