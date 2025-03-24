@@ -88,6 +88,40 @@ This script will:
 
 The frontend will be accessible in your web browser.
 
+## Model Details
+1. Summarization: Uses NLTK library for extractive summarization.
+
+2. Sentiment Analysis: Employs the "distilbert-base-uncased-finetuned-sst-2-english" model via Hugging Face's pipeline.
+
+3. Topic Extraction: Utilizes the Gemini API for topic extraction from summaries.
+
+4. Topic Overlap: Uses the SentenceTransformer model 'all-MiniLM-L6-v2' for finding common and unique topics.
+
+5. Machine Translation: Employs the "Helsinki-NLP/opus-mt-en-hi" model for English to Hindi translation.
+
+6. Text-to-Speech: Uses Google's Text-to-Speech (gTTS) for converting Hindi text to audio.
+
+## API Developement
+The project uses a single API endpoint that orchestrates all the functionalities:
+
+- Endpoint: /search
+
+- Method: POST
+
+- Request Body: JSON with a search_query field
+
+- Response: JSON containing processed news data
+
+## API Usage
+Third-party APIs used in this project:
+
+- Gemini API:
+
+Purpose: Used for topic extraction and comparative analysis of articles.
+
+Integration: Accessed through the google-genai Python library.
+
+
 ## Usage
 
 1. Start the backend server.
