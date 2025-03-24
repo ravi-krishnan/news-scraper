@@ -3,6 +3,7 @@
 This project consists of a backend API and a frontend Streamlit application for searching and analyzing news articles.
 
 ## Project Structure
+```
 .
 ├── backend/
 │ ├── api.py
@@ -13,6 +14,7 @@ This project consists of a backend API and a frontend Streamlit application for 
 └── frontend/
 ├── main.py
 └── script.sh
+```
 
 ## Backend
 
