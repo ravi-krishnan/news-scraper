@@ -12,8 +12,8 @@ This project consists of a backend API and a frontend Streamlit application for 
 │ ├── requirements.txt
 │ └── script.sh
 └── frontend/
-├── main.py
-└── script.sh
+  ├── main.py
+  └── script.sh
 ```
 
 ## Backend
@@ -133,6 +133,22 @@ Integration: Accessed through the google-genai Python library.
 ## Dependencies
 
 See `backend/requirements.txt` for a full list of Python dependencies.
+
+##Assumptions
+
+1. I have assumed that the news website will consistently display relevant news related to the search query.
+
+2. The extracted summary from the article will contain content related to the company's topic.
+
+##Limitations
+
+1. Sometimes the scraped articles may contain only minimal information about the queried company, leading to extracted summaries that may not be entirely relevant.
+
+2. The extracted summaries undergo minimal filtering, which can sometimes result in displaying unfiltered content, potentially disrupting the UI.
+
+3. The Gemini free tier imposes a limit of 15 requests per minute. To avoid failures, API calls are optimized to adhere to this constraint, which can lead to increased processing time.
+
+4. The generated audio is purely a text-to-speech conversion of the final sentiment analysis. As a result, the audio may sound different since the TTS model lacks contextual awareness of the topic.
 
 ## Note
 
