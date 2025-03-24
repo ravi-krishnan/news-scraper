@@ -1,5 +1,5 @@
 from flask import Flask, request, jsonify
-from apiv2 import process_search_query
+from api import process_search_query
 from utils import load_nltk
 import json
 
