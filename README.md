@@ -45,6 +45,27 @@ cd backend
 ```
 ./script.sh
 ```
+
+script.sh
+```
+#!/bin/bash
+# Create a virtual environment if it doesn't exist
+if [ ! -d "venv" ]; then
+    echo "Creating virtual environment..."
+    python3 -m venv venv
+fi
+
+echo "Activating virtual environment..."
+source venv/bin/activate
+
+echo "Installing packages..."
+pip install -r requirements.txt
+
+
+echo "Running Python script..."
+waitress-serve --listen=*:8000 main:app
+```
+
 This script will:
 - Create a virtual environment (if it doesn't exist).
 - Activate the virtual environment.
@@ -80,6 +101,28 @@ cd frontend
 ```
 ./script.sh
 ```
+
+script.sh
+```
+#!/bin/bash
+
+# Create a virtual environment if it doesn't exist
+if [ ! -d "venv" ]; then
+    echo "Creating virtual environment..."
+    python3 -m venv venv
+fi
+
+echo "Activating virtual environment..."
+source venv/bin/activate
+
+echo "Installing packages..."
+pip install streamlit
+
+
+echo "Running streamlit..."
+streamlit run main.py
+```
+
 This script will:
 - Create a virtual environment (if it doesn't exist)
 - Activate the virtual environment
