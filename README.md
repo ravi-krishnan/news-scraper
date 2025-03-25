@@ -134,13 +134,13 @@ Integration: Accessed through the google-genai Python library.
 
 See `backend/requirements.txt` for a full list of Python dependencies.
 
-##Assumptions
+## Assumptions
 
 1. I have assumed that the news website will consistently display relevant news related to the search query.
 
 2. The extracted summary from the article will contain content related to the company's topic.
 
-##Limitations
+## Limitations
 
 1. Sometimes the scraped articles may contain only minimal information about the queried company, leading to extracted summaries that may not be entirely relevant.
 
